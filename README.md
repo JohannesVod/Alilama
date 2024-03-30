@@ -15,7 +15,7 @@ $`\textcolor{blue}{\text{Once upon a time, Tom and Lisa found a shiny red apple.
 I also implemented a fast tokenizer based on MinBpe by Andrej karpathy in c++ and connected it using ctypes.
 
 # inference my pretrained models
-To try out one of my models, you can open the inference.ipynb file in jupyter and just execute the cells. In the first cell, you can specify the model you want to run. Currently, i only trained a 2 million parameter model. In the second cell, you can specify the "prompt" for the model. I am not completely satisfied with the performance of the model, even tho it seems to perform as well as a model of the same size from the TinyStories paper. There is definitely some improvement we can still do. For example, using warmup steps/cosine learning rate schedule as used in the training of Llama2 would be a good starting point. I am probably gonna include it in the future. Also, obviously training larger models would give much better results, but unfortunately i don't have enough compute for this.
+To try out one of my models, you can open the inference.ipynb file in jupyter and just execute the cells. In the first cell, you can specify the model you want to run. I already trained "alilama_2M.pth" (d_model=128, blocks=8, max_seq_len=128, num_heads=8, hidden_dim=4*d_model) with learning rate 1e^-4. It took around 10 hours to train on my NVIDIA GeForce RTX 3050. I trained for around 4 epochs, so the model saw the complete dataset 4 times. Larger models would give much better results, but unfortunately i don't have the compute for that.. In the second cell, you can specify the "prompt" for the model. I am not completely satisfied with the performance of the model, even tho it seems to perform as well as a model of the same size from the TinyStories paper. There is definitely some improvement we can still do. For example, using warmup steps/cosine learning rate schedule as used in the training of Llama2 would be a good starting point. I am probably gonna include it in the future. Also, obviously training larger models would give much better results, but unfortunately i don't have enough compute for this.
 
 # train on your own Data
 ## Step 1: build Your Dataset
@@ -59,9 +59,9 @@ python train.py
 
 This will train the model. You can adjust the model and training parameters in TRAINCONFIG.py
 
-# inference
+# inference your model
 
-To test your trained model, see the [inference](inference.ipynb) notebook. Specify the start string and execute the model on it. You can see the already trained models in the models folder. I already trained "alilama_2M.pth" (d_model=480, blocks=8, max_seq_len=128, num_heads=8, hidden_dim=4*d_model) with learning rate 1e^-4. It took around 10 hours to train on my NVIDIA GeForce RTX 3050. I trained for around 4 epochs, so the model saw the complete dataset 4 times. Larger models would give much better results, but unfortunately i don't have the compute for that.
+To test your trained model, see the [inference](inference.ipynb) notebook. Specify the start string and execute the model on it. You can see the already trained models in the models folder.
 
 # main sources
 The idea repo is inspired by an [implementation of the llama model](https://github.com/karpathy/llama2.c) from Andrej Karpathy, however we implemented our own model that comes close to the performance of the Llama model, while beeing much easier to understand and adapt. To understand the model architecture and gradient descent better, i can recommend these two videos (in this order):
