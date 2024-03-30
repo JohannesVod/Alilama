@@ -1,0 +1,10 @@
+__pycache__
+data_raw/*
+data/data_raw/*
+data/data_shards/*
+waste
+.ipynb_checkpoints
+models/alilama_58M.pth
+models/alilama_58M.pth_loss.txt
+models/alilama_15M.pth
+models/alilama_15M.pth_loss.txt
