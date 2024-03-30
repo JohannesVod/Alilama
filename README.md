@@ -12,7 +12,6 @@ As mentioned in the talk (Cybersecurity and AI), i adapted the [standart transfo
 
 $${\color{red}Once upon a time, Tom and Lisa found a shiny red apple. They both wanted it. Tom said, "I found it first!" Lisa said, "I want it too!"}$$
 
-
 Tom said, "No, it's mine!" They both pulled and pulled, but the apple did not move. Tom and Lisa were sad. They could not play with the apple anymore. They had to find a way to make the apple disappear. They could not agree on what to do. Then, Tom had an idea. He said, "Let's share the apple!" They both agreed. They shared the apple and played together. They were happy and became friends.
 
 I also implemented a fast tokenizer based on MinBpe by Andrej karpathy in c++ and connected it using ctypes.
