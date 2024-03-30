@@ -10,11 +10,11 @@ An easy to understand Transformer model implementation. This repo is designed so
 # model Architecture
 As mentioned in the talk (Cybersecurity and AI), i adapted the [standart transformer decoder architecture](https://arxiv.org/abs/1706.03762), except that i used relative positioning as described in [ALiBi](https://arxiv.org/abs/2108.12409). I also moved the batch norm layers in front of the Attention and MLP layers. For weight initalization i used nn.init.xavier_normal_, as mentioned in [this paper](https://www.cs.toronto.edu/~mvolkovs/ICML2020_tfixup.pdf). To reduce model size, i used [weight tying](https://benjaminwarner.dev/2023/07/28/rest-of-the-transformer) for the input embedding and output projection. I called this model "alilama" because it uses the ALiBi positional encoding and some tricks from the llama2 architecture. To test the implementation, i used the [TinyStories](https://huggingface.co/datasets/roneneldan/TinyStories) dataset. Here is a test story from the "alilama_2M" model i trained (the blue text is written by me, the rest is filled up by the model):
 
-$${\color{red}Red}$$
-```diff
-- text in red Once upon a time, Tom and Lisa found a shiny red apple. They both wanted it. Tom said, "I found it first!" Lisa said, "I want it too!"
+$${\color{red}Once upon a time, Tom and Lisa found a shiny red apple. They both wanted it. Tom said, "I found it first!" Lisa said, "I want it too!"}$$
+
+
 Tom said, "No, it's mine!" They both pulled and pulled, but the apple did not move. Tom and Lisa were sad. They could not play with the apple anymore. They had to find a way to make the apple disappear. They could not agree on what to do. Then, Tom had an idea. He said, "Let's share the apple!" They both agreed. They shared the apple and played together. They were happy and became friends.
-```
+
 I also implemented a fast tokenizer based on MinBpe by Andrej karpathy in c++ and connected it using ctypes.
 
 # inference my pretrained models
