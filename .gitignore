@@ -1,6 +1,8 @@
 __pycache__
 data_raw/*
-data/data_raw/*
+data/data_raw/TinyStories_all_data.tar.gz
+data/data_raw/train_data.txt
+data/data_raw/.gitkeep
 data/data_shards/*
 waste
 .ipynb_checkpoints
