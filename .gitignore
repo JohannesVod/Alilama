@@ -2,8 +2,10 @@ __pycache__
 data_raw/*
 data/data_raw/TinyStories_all_data.tar.gz
 data/data_raw/train_data.txt
+data/data_raw/reviews.txt
 data/data_raw/.gitkeep
 data/data_shards/*
+data/data_shardsOld
 waste
 .ipynb_checkpoints
 models/alilama_58M.pth
