@@ -30,7 +30,7 @@ elif os.name == 'posix':  # Linux
 else:
     raise OSError("Unsupported operating system")
 
-dll_path = os.path.join(script_dir, f"funcs{lib_extension}")
+dll_path = os.path.join(script_dir, f"Fastfuncs{lib_extension}")
 funcs = ctypes.CDLL(dll_path)
 
 # Define the input and output types of the function
