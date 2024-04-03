@@ -42,7 +42,7 @@ def Pretokenize():
         raise RuntimeError("there is no data yet:( Please make sure that data_raw has a file called 'train_data.txt'!")
     tokenizer_save_path = os.path.join(TOKENIZER_PATH, "tokenizer")
     data_set_size = os.path.getsize(DATA_PATH)
-    NUM_CHUNKS = data_set_size//92955624 # good chunk size
+    NUM_CHUNKS = data_set_size//92955624 + 1 # good chunk size
     print("Number of Chunks: ", NUM_CHUNKS)
     # Initialize tokenizer
     tokenizer = RegexTokenizer()
