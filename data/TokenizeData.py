@@ -34,7 +34,11 @@ def Pretokenizeshard(tokenizer, shard, shard_id):
     print(f"compressed to: {int(100*len(tokenized)/len(shard))}%")
     # store as file:
     np_data = np.array(tokenized, dtype=np.uint16)
-    np.save(os.path.join("data/data_shards", shard_name), np_data)
+    data_folder = "data/data_shards"
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
+    np.save(os.path.join(data_folder, shard_name), np_data)
+    print(f"saved as {data_folder}/{shard_name}")
 
 def Pretokenize():
     print(DATA_PATH)
@@ -57,7 +61,7 @@ def Pretokenize():
         print("Loading already trained tokenizer! To retrain delete the tokenizer file in models/tokenizer.model")
         tokenizer.load(tokenizer_save_path + ".model")
     shard_id = 0
-    with ProcessPoolExecutor(max_workers=8) as executor:
+    with ProcessPoolExecutor(max_workers=1) as executor:
         for shard_id, this_shard in enumerate(ReadShards(NUM_CHUNKS), 1):
             executor.submit(Pretokenizeshard, tokenizer, this_shard, shard_id)
 
