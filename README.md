@@ -47,7 +47,13 @@ execute
 python data/tokenizeData.py
 ```
 
-This can take a long time (for the TinyStories dataset up to an hour)
+This can take some time (up to 10 minutes, depending on the dataset)
+
+to train on your custom dataset, use:
+
+```bash
+python data/TokenizeData.py --data_path=path_to_your_file.txt
+```
 
 ## Step 3: train the model
 
