@@ -1,17 +1,9 @@
-class ModelParams:
-    model_name:str = "alilama"
-    d_model:int = 128
-    blocks:int = 8
-    max_seq_len:int = 128
-    num_heads:int = 8
-    hidden_dim:int = 4*d_model
-    head_width:int = d_model//num_heads
-
 # change model Parameters here:
-model_name = "alilama"
+model_name = "CNNFormer"
 d_model = 128 # embedding dimension
-blocks = 8 # number of transformer blocks that are repeated
+blocks = 4 # number of transformer blocks that are repeated
 max_seq_len = 128 # sequence length the transformer is trained on
+block_len = 16 # the length of the decoder/encoder blocks
 num_heads = 8 # heads in the multiheaded attention
 hidden_dim = 4*d_model # size of linear transformation inside MLP
 head_width = d_model//num_heads # width of head
@@ -24,7 +16,7 @@ weight_tying_dict = {}
 # {3:1, 5:1, 4:2, 6:2} ~1.32 at 400000 with 1496064 params
 # Training Parameters
 BATCH_SIZE = 248
-learning_rate = 5e-5 # set to 1e-4 at start, then at 1e-5
+learning_rate = 1e-4 # set to 1e-4 at start, then at 1e-5
 train_steps = 1000000 # Numbers of batches used for training
 beta1 = 0.9 # Parameter for adam optimizer
 beta2 = 0.95

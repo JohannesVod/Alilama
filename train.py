@@ -7,6 +7,7 @@ import glob
 import random
 from model import Transformer, ModelParameters
 from TRAINCONFIG import *
+from math import ceil
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -42,10 +43,9 @@ class IterDataLoader(IterableDataset):
 
     def __iter__(self):
         for data_file in self.data_files:
-            print(data_file)
             current_shard = np.load(data_file, mmap_mode='r')
             shard_len = len(current_shard)
-            num_samples = int(shard_len/self.seq_len)
+            num_samples = ceil(shard_len/self.seq_len)-1
             indices = [i for i in range(num_samples)]
             random.shuffle(indices)
             for index in indices:
@@ -61,6 +61,7 @@ model_args = dict(
     d_model = d_model,
     blocks = blocks,
     max_seq_len = max_seq_len,
+    block_len = block_len,
     num_heads = num_heads,
     hidden_dim = hidden_dim,
     head_width = head_width,
@@ -157,18 +158,18 @@ for epoch in range(1, 101):
     for x_batch, y_batch in train_loader:
         X = x_batch.to(device)
         Y = y_batch.to(device)
-        res = model(X, Y)
-        loss = model.last_loss
-        optimizer.zero_grad(set_to_none=True)
-        loss.backward()
-        optimizer.step()
-        # Update steps
-        iter_count += 1
-        if iter_count >= train_steps:
-            break
-        if iter_count % eval_interval == 0:
-            Eval(model, iter_count)
-        if iter_count % log_interval == 0:
-            zero_grad_percent = calculate_zero_gradient_percentage(model)
-            formatted_loss = "{:.4f}".format(loss.item())
-            print(f"step: {iter_count} | loss: {formatted_loss} | zero grad: {int(zero_grad_percent)}%")
+        # res = model(X, Y)
+        # loss = model.last_loss
+        # optimizer.zero_grad(set_to_none=True)
+        # loss.backward()
+        # optimizer.step()
+        # # Update steps
+        # iter_count += 1
+        # if iter_count >= train_steps:
+        #     break
+        # if iter_count % eval_interval == 0:
+        #     Eval(model, iter_count)
+        # if iter_count % log_interval == 0:
+        #     zero_grad_percent = calculate_zero_gradient_percentage(model)
+        #     formatted_loss = "{:.4f}".format(loss.item())
+        #     print(f"step: {iter_count} | loss: {formatted_loss} | zero grad: {int(zero_grad_percent)}%")

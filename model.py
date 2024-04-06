@@ -5,12 +5,15 @@ from TRAINCONFIG import *
 from typing import Optional
 from dataclasses import dataclass, field
 
+# TODO: Remove alibi in cross attention?
+
 @dataclass
 class ModelParameters:
     model_name:str = "alilama"
     d_model:int = 128
     blocks:int = 8
     max_seq_len:int = 128
+    block_len:int = 32
     num_heads:int = 8
     hidden_dim:int = 4*d_model
     head_width:int = d_model//num_heads
@@ -50,7 +53,7 @@ class MHSA(nn.Module):
         self.v.weight = other.v.weight
         self.preadditive.weight = other.preadditive.weight
 
-    def forward(self, queries, keys, values, mask):
+    def forward(self, queries, keys, values, mask=None):
         N, t_q, d = queries.shape # input shape
         _, t_v, _ = keys.shape # values shape
 
@@ -68,7 +71,8 @@ class MHSA(nn.Module):
         att = att/self.params.head_width**(1/2) # rescale
         # apply relative embedding (ALIBI):
         att += (self.m*self.pos_embed[:t_q, :t_v]).unsqueeze(0)
-        att = att + mask[:, :, :t_q, :t_v]
+        if mask is not None:
+            att = att + mask[:, :, :t_q, :t_v]
         att = F.softmax(att, -1)
         res = att @ v # (N, num_heads, t_q, head_width)
         res = res.transpose(1, 2) # (N, t_v, num_heads, head_width)
@@ -97,30 +101,34 @@ class MLP(nn.Module):
 
 # Main transformer decoder block:
 class TBlock(nn.Module):
-    def __init__(self, device, params: ModelParameters):
+    def __init__(self, device, params: ModelParameters, do_cross_attention=True):
         super(TBlock, self).__init__()
         self.norm1 = nn.LayerNorm(params.d_model)
         self.MHSA = MHSA(device, params)
         self.norm2 = nn.LayerNorm(params.d_model)
-        self.MHCA = MHSA(device, params) # cross attention
+        if do_cross_attention:
+            self.MHCA = MHSA(device, params) # cross attention
+            self.norm3 = nn.LayerNorm(params.d_model)
         self.MLP = MLP(params)
-        self.norm3 = nn.LayerNorm(params.d_model)
         # mask stored here so that we don't have to redefine it again
         self.mask = torch.triu(torch.full((params.max_seq_len, params.max_seq_len), -float('inf')), diagonal=1)
         self.mask = self.mask.unsqueeze(0).unsqueeze(0).to(device)
     
     def weightTye(self, other):
         self.MHSA.weightTye(other.MHSA)
+        self.MHCA.weightTye(other.MHCA)
         self.MLP.weightTye(other.MLP)
         print("successfully tyed blocks!")
 
-    def forward(self, x):
+    def forward(self, x, enc_inpt=None):
         # slight change: applying Norm before Attention head and MLP
         x = self.norm1(x)
-        att = x + self.MHSA(x, x, x, self.mask)
-        x = self.norm2(att)
-
-        return att+x
+        x = x + self.MHSA(x, x, x, self.mask)
+        x = self.norm2(x)
+        if enc_inpt is not None:
+            x = x + self.MHCA(x, enc_inpt, enc_inpt)
+            x = self.norm3(x)
+        return x + self.MLP(x)
 
 class Transformer(nn.Module):
     last_loss: Optional[torch.Tensor]
@@ -132,14 +140,12 @@ class Transformer(nn.Module):
         self.token_count = token_count
         # embed each token into a vector of dimension d_model:
         self.embed = nn.Embedding(token_count, params.d_model)
-        # Transformer blocks stored as list
-        t_blocks = [TBlock(device, params) for _ in range(params.blocks)]
-        # weight tying some transformer blocks (experimental):
-        for el in params.weight_tying_dict:
-            to_tye = t_blocks[params.weight_tying_dict[el]]
-            print(f"tying block {el} with block {params.weight_tying_dict[el]}")
-            t_blocks[el].weightTye(to_tye)
-        self.blocks = nn.ModuleList(t_blocks)
+        # encoder blocks stored as list
+        encoder_blocks = [TBlock(device, params, do_cross_attention=False) for _ in range(params.blocks)]
+        self.enc_blocks = nn.ModuleList(encoder_blocks)
+        # decoder blocks:
+        decoder_blocks = [TBlock(device, params) for _ in range(params.blocks)]
+        self.dec_blocks = nn.ModuleList(decoder_blocks)
         # final projection:
         self.last_lin = nn.Linear(params.d_model, token_count, bias=False)
         # weight tying (see for example https://benjaminwarner.dev/2023/07/28/rest-of-the-transformer):
@@ -156,12 +162,17 @@ class Transformer(nn.Module):
             nn.init.xavier_normal_(module.weight)
 
     def forward(self, x, y=None):
+        N, _ = x.shape
         # shape: (N, t)
         x = self.embed(x) # embed the tokens into d_model dimensional vectors
-        # Apply transformer blocks:
         # shape: (N, t, d)
-        for block in self.blocks:
-            x = block(x)
+        encoded = x
+        for block in self.enc_blocks:
+            encoded = block(encoded)
+
+        for block in self.dec_blocks:
+            x = block(x, encoded)
+
         x = self.last_lin(x)
         # Note that the last Softmax function is implicitly calculated in the cross entropy
         if y is not None:
