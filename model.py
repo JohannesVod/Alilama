@@ -3,7 +3,6 @@ import torch.nn.functional as F
 import torch
 from TRAINCONFIG import *
 from typing import Optional
-
 from dataclasses import dataclass, field
 
 @dataclass
@@ -51,29 +50,30 @@ class MHSA(nn.Module):
         self.v.weight = other.v.weight
         self.preadditive.weight = other.preadditive.weight
 
-    def forward(self, x, mask):
-        N, t, d = x.shape # input shape
-        
-        def SplitIntoHeads(tens):
+    def forward(self, queries, keys, values, mask):
+        N, t_q, d = queries.shape # input shape
+        _, t_v, _ = keys.shape # values shape
+
+        def SplitIntoHeads(tens, t):
             # Reshapes to (N, num_heads, t, head_width)
             reshaped = tens.reshape((N, t, self.params.num_heads, self.params.head_width)) 
             return reshaped.transpose(1, 2)
 
-        q = SplitIntoHeads(self.q(x)) # (N, num_heads, t, head_width)
-        k = SplitIntoHeads(self.k(x)) # (N, num_heads, t, head_width)
-        v = SplitIntoHeads(self.v(x)) # (N, num_heads, t, head_width)
+        q = SplitIntoHeads(self.q(queries), t_q) # (N, num_heads, t_q, head_width)
+        k = SplitIntoHeads(self.k(keys), t_v) # (N, num_heads, t_v, head_width)
+        v = SplitIntoHeads(self.v(values), t_v) # (N, num_heads, t_v, head_width)
 
         # compute attention:
-        att = q@k.transpose(-2, -1) # (N, num_heads, t, t)
+        att = q@k.transpose(-2, -1) # (N, num_heads, t_q, t_v)
         att = att/self.params.head_width**(1/2) # rescale
         # apply relative embedding (ALIBI):
-        att += (self.m*self.pos_embed[:t, :t]).unsqueeze(0)
-        att = att + mask[:, :, :t, :t]
+        att += (self.m*self.pos_embed[:t_q, :t_v]).unsqueeze(0)
+        att = att + mask[:, :, :t_q, :t_v]
         att = F.softmax(att, -1)
-        self.att_matr = att
-        res = att @ v
-        res = res.transpose(1, 2) # (N, t, num_heads, head_width)
-        return res.contiguous().view(N, t, d)
+        res = att @ v # (N, num_heads, t_q, head_width)
+        res = res.transpose(1, 2) # (N, t_v, num_heads, head_width)
+        res = res.contiguous().view(N, t_v, d)
+        return res 
 
 # Multilayer Perceptron:
 class MLP(nn.Module):
@@ -115,7 +115,7 @@ class TBlock(nn.Module):
     def forward(self, x):
         # slight change: applying Norm before Attention head and MLP
         x = self.norm1(x)
-        att = x + self.MHSA(x, self.mask)
+        att = x + self.MHSA(x, x, x, self.mask)
         x = self.norm2(self.MLP(att))
         return att+x
 
@@ -143,7 +143,6 @@ class Transformer(nn.Module):
         self.last_lin.weight = self.embed.weight
         # apply special initialization scheme to the layers
         self.apply(self._init_weights)
-        
 
     def _init_weights(self, module):
         """

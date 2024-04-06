@@ -9,8 +9,8 @@ class ModelParams:
 
 # change model Parameters here:
 model_name = "alilama"
-d_model = 512 # embedding dimension
-blocks = 4 # number of transformer blocks that are repeated
+d_model = 128 # embedding dimension
+blocks = 8 # number of transformer blocks that are repeated
 max_seq_len = 128 # sequence length the transformer is trained on
 num_heads = 8 # heads in the multiheaded attention
 hidden_dim = 4*d_model # size of linear transformation inside MLP
