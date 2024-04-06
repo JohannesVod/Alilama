@@ -116,7 +116,7 @@ class TBlock(nn.Module):
         # slight change: applying Norm before Attention head and MLP
         x = self.norm1(x)
         att = x + self.MHSA(x, self.mask)
-        x = self.norm2(self.MLP(att))
+        x = self.MLP(self.norm2(att)) # TODO: This is not correct maybe?
         return att+x
 
 class Transformer(nn.Module):
