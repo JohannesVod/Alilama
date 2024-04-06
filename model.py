@@ -101,8 +101,10 @@ class TBlock(nn.Module):
         super(TBlock, self).__init__()
         self.norm1 = nn.LayerNorm(params.d_model)
         self.MHSA = MHSA(device, params)
-        self.MLP = MLP(params)
         self.norm2 = nn.LayerNorm(params.d_model)
+        self.MHCA = MHSA(device, params) # cross attention
+        self.MLP = MLP(params)
+        self.norm3 = nn.LayerNorm(params.d_model)
         # mask stored here so that we don't have to redefine it again
         self.mask = torch.triu(torch.full((params.max_seq_len, params.max_seq_len), -float('inf')), diagonal=1)
         self.mask = self.mask.unsqueeze(0).unsqueeze(0).to(device)
@@ -116,7 +118,8 @@ class TBlock(nn.Module):
         # slight change: applying Norm before Attention head and MLP
         x = self.norm1(x)
         att = x + self.MHSA(x, x, x, self.mask)
-        x = self.norm2(self.MLP(att))
+        x = self.norm2(att)
+
         return att+x
 
 class Transformer(nn.Module):
