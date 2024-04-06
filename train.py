@@ -7,6 +7,7 @@ import glob
 import random
 from model import Transformer, ModelParameters
 from TRAINCONFIG import *
+from math import ceil
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -45,7 +46,7 @@ class IterDataLoader(IterableDataset):
             print(data_file)
             current_shard = np.load(data_file, mmap_mode='r')
             shard_len = len(current_shard)
-            num_samples = int(shard_len/self.seq_len)
+            num_samples = ceil(shard_len/self.seq_len)-1
             indices = [i for i in range(num_samples)]
             random.shuffle(indices)
             for index in indices:
