@@ -158,18 +158,18 @@ for epoch in range(1, 101):
     for x_batch, y_batch in train_loader:
         X = x_batch.to(device)
         Y = y_batch.to(device)
-        # res = model(X, Y)
-        # loss = model.last_loss
-        # optimizer.zero_grad(set_to_none=True)
-        # loss.backward()
-        # optimizer.step()
-        # # Update steps
-        # iter_count += 1
-        # if iter_count >= train_steps:
-        #     break
-        # if iter_count % eval_interval == 0:
-        #     Eval(model, iter_count)
-        # if iter_count % log_interval == 0:
-        #     zero_grad_percent = calculate_zero_gradient_percentage(model)
-        #     formatted_loss = "{:.4f}".format(loss.item())
-        #     print(f"step: {iter_count} | loss: {formatted_loss} | zero grad: {int(zero_grad_percent)}%")
+        res = model(X, Y)
+        loss = model.last_loss
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        optimizer.step()
+        # Update steps
+        iter_count += 1
+        if iter_count >= train_steps:
+            break
+        if iter_count % eval_interval == 0:
+            Eval(model, iter_count)
+        if iter_count % log_interval == 0:
+            zero_grad_percent = calculate_zero_gradient_percentage(model)
+            formatted_loss = "{:.4f}".format(loss.item())
+            print(f"step: {iter_count} | loss: {formatted_loss} | zero grad: {int(zero_grad_percent)}%")

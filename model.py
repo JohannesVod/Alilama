@@ -126,7 +126,7 @@ class TBlock(nn.Module):
         x = x + self.MHSA(x, x, x, self.mask)
         x = self.norm2(x)
         if enc_inpt is not None:
-            x = x + self.MHCA(x, enc_inpt, enc_inpt)
+            x = x + self.MHCA(x, enc_inpt, enc_inpt) # , self.mask)
             x = self.norm3(x)
         return x + self.MLP(x)
 
