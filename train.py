@@ -8,6 +8,7 @@ import random
 from model import Transformer, ModelParameters
 from TRAINCONFIG import *
 from math import ceil
+import time
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -95,11 +96,15 @@ print("Parameter count of model: ", param_count)
 model_path = os.path.join("models", model_name)
 iter_count = 0
 
+time_taken = 0 # measures training time
+
 if os.path.exists(model_path):
     # load model if possible
     mod_data = torch.load(model_path)
     state_dic = mod_data["state_dict"]
     iter_count = mod_data["iter"]
+    if "train_time" in mod_data:
+        time_taken = mod_data["train_time"]
     model.load_state_dict(state_dic)
     print("Model loaded successfully.")
 
@@ -111,11 +116,16 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, betas=(beta1
 print_step = 0
 print("Device used:", device)
 print("start training...")
+last_time = time.time()
 
 def Eval(model, iter_c):
+    global time_taken, last_time
     """
     evaluates the model and generates a test sample
     """
+    # measure time:
+    time_taken += time.time()-last_time
+    
     model.eval()
     curr_s = 0
     losses = []
@@ -141,19 +151,20 @@ def Eval(model, iter_c):
     state = {
         'iter': iter_c,
         'state_dict': model.state_dict(),
-        'params': model_args
+        'params': model_args,
+        'train_time': time_taken
     }
     torch.save(state, model_path)
     loss_path = os.path.join("models", f"{model_name}_loss.txt")
     mode = "a" if os.path.exists(loss_path) else "w"
     with open(loss_path, mode) as f:
-        f.write(f"Iteration: {iter_c}, Eval Loss: {eval_loss}\n")
+        f.write(f"Iteration: {iter_c}, Eval Loss: {eval_loss}, time: {time_taken}, samples: {iter_c*BATCH_SIZE}x{max_seq_len}={max_seq_len*iter_c*BATCH_SIZE} tokens\n")
     model.train()
+    last_time = time.time()
     return
-
 model.train()
 
-for epoch in range(1, 101):
+for epoch in range(1, 2):
     print(f"epoch {epoch}")
     for x_batch, y_batch in train_loader:
         X = x_batch.to(device)
